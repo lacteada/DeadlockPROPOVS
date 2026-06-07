@@ -78,7 +78,7 @@ def build_payload(videos: list[dict[str, Any]]) -> dict[str, Any]:
             "name": CHANNEL_NAME,
             "url": CHANNEL_URL,
         },
-        "last_updated": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+        "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
         "total_videos": len(videos),
         "videos": videos,
     }
