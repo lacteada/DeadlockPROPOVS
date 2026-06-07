@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deadlock PRO POVS</title>
+<style>
+  body { background: #000000; color: #e0e0e0; margin: 0; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; padding: 1rem 0; }
+  main { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 640px; max-height: 90vh; padding: 0 1rem; box-sizing: border-box; gap: 1.5rem; }
+  .search-container { display: flex; width: 100%; flex-shrink: 0; gap: 0.5rem; }
+  input, select { padding: 0.75rem; border: 1px solid #333; background: #111; color: #fff; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+  input { flex: 1; border-radius: 6px; }
+  select { border-radius: 6px; background: #1a1a1a; cursor: pointer; min-width: 150px; }
+  input:focus, select:focus { border-color: #666; }
+  #results { width: 100%; display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; flex-grow: 1; padding-right: 4px; }
+  #results::-webkit-scrollbar { width: 6px; }
+  #results::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  .video-card { background: #111; padding: 1rem; border-radius: 6px; border: 1px solid #222; flex-shrink: 0; transition: border-color 0.2s; }
+  .video-card:hover { border-color: #444; }
+  .video-card a { color: #fff; text-decoration: none; font-weight: 500; display: block; }
+  .video-card a:hover { text-decoration: underline; }
+  svg.logo { fill: #fff; width: 48px; height: 48px; flex-shrink: 0; }
+  .github-link { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .github-link svg { fill: #888; width: 28px; height: 28px; transition: fill 0.2s; }
+  .github-link:hover svg { fill: #fff; }
+  .loading { text-align: center; color: #888; }
+  .error { text-align: center; color: #ff5555; }
+</style>
+</head>
+<body>
+
+  <main>
+    <svg class="logo" viewBox="0 0 24 24"><path d="M21.58 7.19c-.23-.86-.91-1.54-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42c-.86.23-1.54.91-1.77 1.77C2 8.75 2 12 2 12s0 3.25.42 4.81c.23.86.91 1.54 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42c.86-.23 1.54-.91 1.77-1.77C22 15.25 22 12 22 12s0-3.25-.42-4.81zM9.5 15.5v-7l6.5 3.5-6.5 3.5z"/></svg>
+    
+    <div class="search-container">
+      <input type="text" id="search" placeholder="Search player...">
+      <select id="hero">
+        <option value="">All Heroes</option>
+      </select>
+    </div>
+
+    <div id="results"></div>
+
+    <a href="https://github.com/lacteada/DeadlockPROPOVS" target="_blank" rel="noopener" aria-label="GitHub" class="github-link">
+      <svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>
+    </a>
+  </main>
+
+  <script>
+    const heroes = ['Abrams','Bebop','Dynamo','Grey Talon','Haze','Infernus','Ivy','Kelvin','Lady Geist','Lash','McGinnis','Mirage','Mo & Krill','Paradox','Pocket','Seven','Shiv','Vindicta','Viscous','Warden','Wraith','Yamato'];
+    const heroSelect = document.getElementById('hero');
+    const searchInput = document.getElementById('search');
+    const resultsDiv = document.getElementById('results');
+    let videos = [];
+
+    heroes.forEach(h => heroSelect.add(new Option(h, h)));
+
+    async function init() {
+      resultsDiv.innerHTML = '<div class="loading">Fetching videos...</div>';
+      try {
+        
+        const channelId = 'UCT39S1m8Kr-Np0XZ2UA1D1Q'; // Deadlock PRO POVS channel
+
+        // We use multiple free Piped API instances in case one is temporarily offline
+        const publicApis = [
+          'https://pipedapi.kavin.rocks',
+          'https://pipedapi.tokhmi.xyz',
+          'https://piped-api.garudalinux.org'
+        ];
+
+        let data = null;
+
+        // Loop through the free APIs until one succeeds
+        for (const api of publicApis) {
+          try {
+            const res = await fetch(`${api}/channel/${channelId}`);
+            if (res.ok) {
+              data = await res.json();
+              break; // If successful, stop looking
+            }
+          } catch (e) {
+            console.warn(`API ${api} failed, trying the next one...`);
+          }
+        }
+
+        if (!data || !data.relatedStreams) {
+            throw new Error('All free APIs are currently busy or channel ID is incorrect.');
+        }
+
+        // Format the results for the HTML
+        videos = data.relatedStreams.map(v => ({
+            title: v.title,
+            link: `https://www.youtube.com${v.url}`
+        }));
+
+        render();
+
+      } catch (err) {
+        console.error(err);
+        resultsDiv.innerHTML = `<div class="error">Data load failed: <br> ${err.message}</div>`;
+      }
+    }
+
+    function render() {
+      const s = searchInput.value.toLowerCase();
+      const h = heroSelect.value.toLowerCase();
+      
+      const filtered = videos.filter(v => {
+        const t = v.title.toLowerCase();
+        return t.includes(s) && (h === '' || t.includes(h));
+      });
+      
+      resultsDiv.innerHTML = filtered.length ? filtered.map(v => `
+        <div class="video-card">
+          <a href="${v.link}" target="_blank" rel="noopener">${v.title}</a>
+        </div>
+      `).join('') : '<div style="color:#888; text-align:center;">No videos found.</div>';
+    }
+
+    searchInput.addEventListener('input', render);
+    heroSelect.addEventListener('change', render);
+
+    init();
+  </script>
+</body>
+</html>
