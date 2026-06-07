@@ -25,10 +25,11 @@ def _to_video_entry(item: list[Any]) -> dict[str, Any] | None:
     if not title or not link:
         return None
 
+    number_value = str(number).strip()
     try:
-        number = int(str(number).strip())
+        number = int(number_value)
     except ValueError:
-        number = str(number).strip()
+        number = number_value
 
     return {
         "title": title,
@@ -78,7 +79,7 @@ def build_payload(videos: list[dict[str, Any]]) -> dict[str, Any]:
             "name": CHANNEL_NAME,
             "url": CHANNEL_URL,
         },
-        "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
+        "last_updated": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
         "total_videos": len(videos),
         "videos": videos,
     }
