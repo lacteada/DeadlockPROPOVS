@@ -47,7 +47,7 @@ def scrape_videos() -> list[dict[str, Any]]:
         video_data_returned=True,
         reverse_chronological=True,
         headless=True,
-        driver="firefox",
+        driver="chrome",
     )
 
     video_data, _ = creator.create_list_for(CHANNEL_SCRAPE_URL, log_silently=True, file_name="id")
